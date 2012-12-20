@@ -1,10 +1,13 @@
 from __future__ import print_function, division
 
 import json
-from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer
+from collections import defaultdict
+
+from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer, asc
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from bottle import route, run, static_file
+import trueskill
 
 db_engine = create_engine('sqlite:///games.sqlite', echo=False)
 Session = scoped_session(sessionmaker(autoflush=True, autocommit=False, bind=db_engine))
@@ -71,6 +74,15 @@ def remove_game(game_id):
     return json.dumps(ret)
 
 
+@route('/ratings')
+@route('/ratings/')
+def ratings():
+    to_table = lambda x: {'player': x[0], 'mu': x[1].mu, 'sigma': x[1].sigma, 'sharpe': x[1].mu / x[1].sigma}
+    s = Session()
+    games = s.query(Game).order_by(asc(Game.game_id)).all()
+    rankings = fit_trueskill(games)
+    return json.dumps({'success': 1, 'ratings': map(to_table, rankings.items())})
+
 
 @route('/')
 @route('/<path>')
@@ -78,6 +90,21 @@ def static(path=None):
     if path is None:
         path = 'index.html'
     return static_file(path, 'static/')
+
+
+def fit_trueskill(sorted_games):
+    env = trueskill.TrueSkill(mu=50, sigma=16.66666666, beta=8.33333333, tau=0.3, draw_probability=0)
+    ratings = defaultdict(env.create_rating)
+    for game in sorted_games:
+        rating1 = ratings[game.player1]
+        rating2 = ratings[game.player2]
+        if game.winner == 1:
+            rating1, rating2 = env.rate_1vs1(rating1, rating2)
+        else:
+            rating2, rating1 = env.rate_1vs1(rating2, rating1)
+        ratings[game.player1] = rating1
+        ratings[game.player2] = rating2
+    return ratings
 
 
 if __name__ == '__main__':

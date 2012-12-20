@@ -25,18 +25,39 @@
                         mData: "winner" }
                 ]
             } );
+
+            $('#ratings').dataTable( {
+                bProcessing: true,
+                bPaginate: false,
+                sAjaxSource: '/ratings',
+                sAjaxDataProp: "ratings",
+                aoColumns: [
+                    {   sTitle: "Player",
+                        mData: "player" },
+                    {   sTitle: "mu",
+                        mData: "mu"},
+                    { sTitle: "sigma",
+                        mData: "sigma" },
+                    { sTitle: "sharpe",
+                        mData: "sharpe" }
+                ]
+            } );
         });
     </script>
 
     <body>
-        <h3> Links </h3>
+        <h3> Resources </h3>
         <ul>
             <li><pre>/games/get</pre> to get the games as json</li>
             <li><pre>/games/add/&lt;player1&gt;/&lt;player2&gt;/&lt;winner&gt;</pre> to add a game</li>
             <li><pre>/games/remove/&lt;game_id&gt</pre> to remove a game</li>
         </ul>
-        <h3> Wiff Waff Games </h3>
+
+        <h3> Historical Wiff Waff Games </h3>
         <table id="wiffwaff"></table>
+
+        <h3 style="margin-top: 2cm"> Trueskill </h3>
+        <table id="ratings"></table>
 
     </body>
 </html>
