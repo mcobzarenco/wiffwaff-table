@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.js"></script>
+    <link rel="stylesheet" type="text/css" href="jquery.dataTables.css">
+    <head>
+        <title>Wiff-Waff Table</title>
+    </head>
+
+    <script>
+        $(function() {
+            $('#wiffwaff').dataTable( {
+                bProcessing: true,
+                bPaginate: false,
+                sAjaxSource: '/games/get',
+                sAjaxDataProp: "games",
+                aoColumns: [
+                    {   sTitle: "Game ID",
+                        mData: "game_id" },
+                    {   sTitle: "Player 1",
+                        mData: "player1"},
+                    { sTitle: "Player 2",
+                        mData: "player2" },
+                    { sTitle: "Winner",
+                        mData: "winner" }
+                ]
+            } );
+        });
+    </script>
+
+    <body>
+        <h3> Links </h3>
+        <ul>
+            <li><pre>/games/get</pre> to get the games as json</li>
+            <li><pre>/games/add/&lt;player1&gt;/&lt;player2&gt;/&lt;winner&gt;</pre> to add a game</li>
+            <li><pre>/games/remove/&lt;game_id&gt</pre> to remove a game</li>
+        </ul>
+        <h3> Wiff Waff Games </h3>
+        <table id="wiffwaff"></table>
+
+    </body>
+</html>
