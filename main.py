@@ -6,12 +6,16 @@ from collections import defaultdict
 from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer, asc
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from bottle import route, run, static_file
+from bottle import route, run, static_file, view
 import trueskill
+
+
+HOST = '10.54.151.5'
+PORT = 8888
+
 
 db_engine = create_engine('sqlite:///games.sqlite', echo=False)
 Session = scoped_session(sessionmaker(autoflush=True, autocommit=False, bind=db_engine))
-
 Base = declarative_base()
 
 
@@ -44,8 +48,8 @@ def get_games():
     return json.dumps(ret)
 
 
-@route('/games/add/<player1>/<player2>/<winner>')
-@route('/games/add/<player1>/<player2>/<winner>/')
+@route('/games/add/<player1>/<player2>/<winner:int>')
+@route('/games/add/<player1>/<player2>/<winner:int>/')
 def add_game(player1, player2, winner):
     try:
         if int(winner) < 1 or int(winner) > 2:
@@ -101,11 +105,11 @@ def ratings():
 
 
 @route('/')
-@route('/<path>')
+@route('/<path:path>')
 def static(path=None):
     if path is None:
         path = 'index.html'
-    return static_file(path, 'static/')
+    return static_file(path, root='static')
 
 
 def fit_trueskill(sorted_games):
@@ -125,4 +129,4 @@ def fit_trueskill(sorted_games):
 
 if __name__ == '__main__':
     Base.metadata.create_all(db_engine, checkfirst=True)
-    run(host='10.54.151.5', port=8888)
+    run(host=HOST, port=PORT)
