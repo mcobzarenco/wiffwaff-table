@@ -48,7 +48,7 @@ def get_games():
 @route('/games/add/<player1>/<player2>/<winner>/')
 def add_game(player1, player2, winner):
     try:
-        if winner < 1 or winner > 2:
+        if int(winner) < 1 or int(winner) > 2:
             raise RuntimeError("winner needs to be either 1 or 2")
         s = Session()
         s.add(Game(player1, player2, winner))
@@ -74,10 +74,26 @@ def remove_game(game_id):
     return json.dumps(ret)
 
 
+@route('/games/allplayers')
+@route('/games/allplayers/')
+def all_players():
+    try:
+        s = Session()
+        unzipped = zip(*s.query(Game.player1, Game.player2).all())
+        players = list(set(unzipped[0]).union(unzipped[1]))
+        ret = {'success': 1, 'players': players}
+    except Exception as e:
+        ret = {'success': 0,
+               'message': str(e)}
+    return json.dumps(ret)
+
+
+
+
 @route('/ratings')
 @route('/ratings/')
 def ratings():
-    to_table = lambda x: {'player': x[0], 'mu': x[1].mu, 'sigma': x[1].sigma, 'sharpe': x[1].mu / x[1].sigma}
+    to_table = lambda x: {'player': x[0], 'mu': x[1].mu, 'sigma': x[1].sigma, 'skill': x[1].mu - 3 * x[1].sigma}
     s = Session()
     games = s.query(Game).order_by(asc(Game.game_id)).all()
     rankings = fit_trueskill(games)
@@ -93,7 +109,7 @@ def static(path=None):
 
 
 def fit_trueskill(sorted_games):
-    env = trueskill.TrueSkill(mu=50, sigma=16.66666666, beta=8.33333333, tau=0.3, draw_probability=0)
+    env = trueskill.TrueSkill(mu=5, sigma=3, beta=1, tau=0.3, draw_probability=0)
     ratings = defaultdict(env.create_rating)
     for game in sorted_games:
         rating1 = ratings[game.player1]

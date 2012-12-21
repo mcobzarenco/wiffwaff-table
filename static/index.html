@@ -8,11 +8,27 @@
     </head>
 
     <script>
+        function set_options(data) {
+            var $form_winner = $('#form_winner');
+            var $form_loser = $('#form_loser');
+            for(i in data['players']) {
+                $form_winner.append($('<option/>').html(data['players'][i]))
+                $form_loser.append($('<option/>').html(data['players'][i]))
+            }
+        }
+
         $(function() {
+            $('#add_game').click(function() {
+                var winner = $("#form_winner option:selected").text();
+                var loser = $("#form_loser option:selected").text();
+                $.ajax('/games/add/' + winner + '/' + loser + '/1',
+                        {async:false})
+            })
+
             $('#wiffwaff').dataTable( {
                 bProcessing: true,
                 bPaginate: false,
-                sAjaxSource: '/games/get',
+                sAjaxSource: "/games/get",
                 sAjaxDataProp: "games",
                 aoColumns: [
                     {   sTitle: "Game ID",
@@ -26,6 +42,8 @@
                 ]
             } );
 
+            $.get('/games/allplayers', set_options, 'json')
+
             $('#ratings').dataTable( {
                 bProcessing: true,
                 bPaginate: false,
@@ -35,11 +53,20 @@
                     {   sTitle: "Player",
                         mData: "player" },
                     {   sTitle: "mu",
-                        mData: "mu"},
-                    { sTitle: "sigma",
-                        mData: "sigma" },
-                    { sTitle: "sharpe",
-                        mData: "sharpe" }
+                        mData: function(data) {
+                            return data["mu"].toFixed(2);
+                        }
+                    },
+                    {   sTitle: "sigma",
+                        mData: function(data) {
+                            return data["sigma"].toFixed(2);
+                        }
+                    },
+                    {   sTitle: "Skill (mu - 3*sigma)",
+                        mData: function(data) {
+                               return data["skill"].toFixed(2);
+                        }
+                    }
                 ]
             } );
         });
@@ -54,6 +81,15 @@
         </ul>
 
         <h3> Historical Wiff Waff Games </h3>
+        <div style="width: 50%">
+            <form>
+                <label for="form_winner">Winner:</label>
+                <select id="form_winner"></select>
+                <label for="form_loser">Loser:</label>
+                <select id="form_loser"></select>
+                <button id="add_game">Add Game</button>
+            </form>
+        </div>
         <table id="wiffwaff"></table>
 
         <h3 style="margin-top: 2cm"> Trueskill </h3>
